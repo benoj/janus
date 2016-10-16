@@ -4,10 +4,13 @@ import akka.actor._
 import akka.pattern.ask
 import com.benoj.janus.behavior.Attributes.Messages.UpdateAttribute
 import com.benoj.janus.behavior.Watchable.Messages.AddWatchers
+import com.benoj.janus.workflow.WorkflowActor.Messages.ProgressUnit
 import com.benoj.janus.workunits.StoryActor
-import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
+import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 class UserActor extends Actor with ActorLogging {
 
@@ -20,14 +23,15 @@ class UserActor extends Actor with ActorLogging {
 }
 
 object ApplicationMain extends App {
+
   import com.benoj.janus.behavior.Attributes.implicits._
 
   import akka.util.Timeout
   import scala.concurrent.duration._
-  implicit val timeout = Timeout(100.days)
+
 
   val system = ActorSystem("Janus")
-  val storyActor: ActorRef = system.actorOf(Props(classOf[StoryActor],"",""),"story")
+  val storyActor: ActorRef = system.actorOf(Props(classOf[StoryActor], "", ""), "story")
 
   val user: ActorRef = system.actorOf(Props[UserActor])
 
@@ -35,8 +39,11 @@ object ApplicationMain extends App {
 
   storyActor ! UpdateAttribute("name", "Get some work done")
 
-  ask(storyActor,CreateTask("task", "description")) onSuccess {
-    case s@_ => println(s"Task Created $s")
+  implicit val timeout = Timeout(100.days)
+
+  val taskCreated = storyActor ? CreateTask("task", "description")
+  taskCreated.onSuccess {
+    case CreatedTask(task) => storyActor ! ProgressUnit(task)
   }
 
   system.awaitTermination()
