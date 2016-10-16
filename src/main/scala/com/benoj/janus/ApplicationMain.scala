@@ -7,7 +7,13 @@ import com.benoj.janus.workunits.TaskActor
 
 
 class UserActor extends Actor with ActorLogging {
-  override def receive: Receive = { case msg: Any => log.info(s"received $msg") }
+
+  log.info("User actor created")
+
+  override def receive: Receive = {
+    case msg@_ => log.info(s"received $msg")
+  }
+
 }
 
 object ApplicationMain extends App {
@@ -16,7 +22,9 @@ object ApplicationMain extends App {
   val system = ActorSystem("Janus")
   val taskActor: ActorRef = system.actorOf(Props(classOf[TaskActor],"",""),"task1")
 
-  taskActor ! AddWatchers(Seq(system.actorOf(Props[UserActor])))
+  val user: ActorRef = system.actorOf(Props[UserActor])
+
+  taskActor ! AddWatchers(Seq(user))
 
   taskActor ! UpdateAttribute("name", "Get some work done")
 

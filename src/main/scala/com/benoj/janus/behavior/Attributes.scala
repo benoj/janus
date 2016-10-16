@@ -1,8 +1,10 @@
 package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging}
+import com.benoj.janus.behavior.Notification.Messages.NotificationMessage
 
 import scala.language.implicitConversions
+import scala.collection._
 
 object Attributes {
 
@@ -43,25 +45,26 @@ trait Attributes  extends BehaviorReceive{
   import com.benoj.janus.behavior.Attributes.Messages._
   import com.benoj.janus.behavior.Attributes._
 
-  var attributes: Seq[TypedAttribute] = Seq.empty
+  var attributes: mutable.Map[AttributeName, AttributeValue] = mutable.Map.empty
 
   def initAttributes(init: TypedAttribute*) = {
-    attributes = init
+    attributes = mutable.Map(init.map(attribute => attribute.name -> attribute.value):_*)
   }
 
   override def behaviorReceive = receiveAttributes orElse super.behaviorReceive
 
   private def receiveAttributes: Receive = {
     case UpdateAttribute(attributeName, newValue) =>
-      attributes.find(_.name == attributeName) match {
+      attributes.get(attributeName) match {
         case None =>
           log.warning(s"Attempted to update attribute $attributeName but not found")
           sender() ! UnknownAttribute(attributeName)
-        case Some(TypedAttribute(_, currentValue)) => currentValue match {
+        case Some(currentValue: AttributeValue) => currentValue match {
           case StringAttributeValue(value) => newValue match {
-            case s@StringAttributeValue(_) =>
+            case value@StringAttributeValue(_) =>
               log.info("Updating string attribute")
-              StringAttribute(attributeName, s)
+              this.self ! NotificationMessage("Updated")
+              attributes(attributeName) = value
           }
         }
       }

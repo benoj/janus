@@ -10,12 +10,15 @@ object Watchable {
 
     case class RemoveWatchers(watcher: Seq[ActorRef])
 
+    case class NotifyWatchers(message: Any)
+
   }
 
 }
 
 trait Watchable extends BehaviorReceive {
   self: Actor with ActorLogging =>
+
   import com.benoj.janus.behavior.Watchable.Messages._
 
   private[this] var watchers: Seq[ActorRef] = Seq()
@@ -29,6 +32,11 @@ trait Watchable extends BehaviorReceive {
     case RemoveWatchers(watchersToRemove) =>
       log.info("Removing Watcher")
       watchers = watchers.filter(watchersToRemove.contains(_))
+    case NotifyWatchers(message) =>
+      watchers.foreach((watcher) => {
+        log.info(s"Notifying watcher $watcher")
+        watcher ! message
+      })
   }
 
 }

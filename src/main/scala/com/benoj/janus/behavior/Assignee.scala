@@ -9,6 +9,7 @@ object Assignee {
     case class UpdateAssignee(assignee: ActorRef)
   }
 }
+
 trait Assignee extends BehaviorReceive{ self: Actor with ActorLogging =>
   private[this] var assignee: Option[ActorRef] = None
 
