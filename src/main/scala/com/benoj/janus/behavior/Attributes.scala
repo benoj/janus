@@ -1,4 +1,4 @@
-package com.benoj.janus.behaviour
+package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging}
 
@@ -37,11 +37,11 @@ object Attributes {
 
 }
 
-trait Attributes {
+trait Attributes  extends BehaviorReceive{
   self: Actor with ActorLogging =>
 
-  import com.benoj.janus.behaviour.Attributes.Messages._
-  import com.benoj.janus.behaviour.Attributes._
+  import com.benoj.janus.behavior.Attributes.Messages._
+  import com.benoj.janus.behavior.Attributes._
 
   var attributes: Seq[TypedAttribute] = Seq.empty
 
@@ -49,22 +49,22 @@ trait Attributes {
     attributes = init
   }
 
-  def receiveAttributes: Receive = {
-    case UpdateAttribute(attributeName, newValue) => {
+  override def behaviorReceive = receiveAttributes orElse super.behaviorReceive
+
+  private def receiveAttributes: Receive = {
+    case UpdateAttribute(attributeName, newValue) =>
       attributes.find(_.name == attributeName) match {
         case None =>
           log.warning(s"Attempted to update attribute $attributeName but not found")
           sender() ! UnknownAttribute(attributeName)
         case Some(TypedAttribute(_, currentValue)) => currentValue match {
           case StringAttributeValue(value) => newValue match {
-            case s@StringAttributeValue(_) => {
+            case s@StringAttributeValue(_) =>
               log.info("Updating string attribute")
               StringAttribute(attributeName, s)
-            }
           }
         }
       }
-    }
   }
 }
 
