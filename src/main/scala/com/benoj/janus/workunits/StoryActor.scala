@@ -42,7 +42,7 @@ class StoryActor(name: String = "", description: String = "") extends Actor
     "description" -> description
   )
 
-  initWorkflow(WorkflowStage("analysis"), WorkflowStage("doing"))
+  override val stages = Seq(WorkflowStage("analysis"), WorkflowStage("doing"))
 
   val tasks: mutable.Map[UUID, ActorRef] = mutable.Map.empty
 

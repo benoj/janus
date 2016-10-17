@@ -8,15 +8,11 @@ import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 
 trait WorkFlow extends BehaviorReceive{ self: Actor with ActorLogging =>
 
-  var workFlow: ActorRef = null
+  protected[this] def stages: Seq[WorkflowStage]
 
-  def initWorkflow(stages: WorkflowStage*) = {
-    log.info("Initializing workflow")
-    workFlow = context.actorOf(Props(classOf[WorkflowActor], stages))
-  }
+  lazy val workFlow: ActorRef = context.actorOf(Props(classOf[WorkflowActor], stages))
 
   override def behaviorReceive: Receive = workflowReceive orElse super.behaviorReceive
-
 
   def workflowReceive: Receive = {
     case msg@ProgressUnit(unit: ActorRef) => workFlow ! msg

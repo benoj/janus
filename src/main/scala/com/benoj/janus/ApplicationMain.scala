@@ -9,8 +9,6 @@ import com.benoj.janus.workunits.StoryActor
 import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 class UserActor extends Actor with ActorLogging {
 
@@ -24,9 +22,9 @@ class UserActor extends Actor with ActorLogging {
 
 object ApplicationMain extends App {
 
+  import akka.util.Timeout
   import com.benoj.janus.behavior.Attributes.implicits._
 
-  import akka.util.Timeout
   import scala.concurrent.duration._
 
 
