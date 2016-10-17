@@ -1,6 +1,7 @@
 package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import scala.collection.mutable
 
 object Watchable {
 
@@ -21,17 +22,17 @@ trait Watchable extends BehaviorReceive {
 
   import com.benoj.janus.behavior.Watchable.Messages._
 
-  private[this] var watchers: Seq[ActorRef] = Seq()
+  private val watchers: mutable.Buffer[ActorRef] = mutable.Buffer.empty
 
   override def behaviorReceive: Receive = receiveWatchers orElse super.behaviorReceive
 
   private def receiveWatchers: Receive = {
     case AddWatchers(watchersToAdd) =>
       log.info("Adding Watcher")
-      watchers = watchers ++ watchersToAdd
+      watchers ++= watchersToAdd
     case RemoveWatchers(watchersToRemove) =>
       log.info("Removing Watcher")
-      watchers = watchers.filter(watchersToRemove.contains(_))
+      watchers --= watchers.filter(watchersToRemove.contains(_))
     case NotifyWatchers(message) =>
       watchers.foreach((watcher) => {
         log.info(s"Notifying watcher $watcher")
