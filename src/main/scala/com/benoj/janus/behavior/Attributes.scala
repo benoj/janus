@@ -45,17 +45,15 @@ trait Attributes  extends BehaviorReceive{
   import com.benoj.janus.behavior.Attributes.Messages._
   import com.benoj.janus.behavior.Attributes._
 
-  var attributes: mutable.Map[AttributeName, AttributeValue] = mutable.Map.empty
+  def attributes: Seq[TypedAttribute]
 
-  def initAttributes(init: TypedAttribute*) = {
-    attributes = mutable.Map(init.map(attribute => attribute.name -> attribute.value):_*)
-  }
+  val attributeMap: mutable.Map[AttributeName, AttributeValue] = mutable.Map(attributes.map(attribute => attribute.name -> attribute.value):_*)
 
   override def behaviorReceive = receiveAttributes orElse super.behaviorReceive
 
   private def receiveAttributes: Receive = {
     case UpdateAttribute(attributeName, newValue) =>
-      attributes.get(attributeName) match {
+      attributeMap.get(attributeName) match {
         case None =>
           log.warning(s"Attempted to update attribute $attributeName but not found")
           sender() ! UnknownAttribute(attributeName)
@@ -64,7 +62,7 @@ trait Attributes  extends BehaviorReceive{
             case value@StringAttributeValue(_) =>
               log.info("Updating string attribute")
               this.self ! NotificationMessage("Updated")
-              attributes(attributeName) = value
+              attributeMap(attributeName) = value
           }
         }
       }

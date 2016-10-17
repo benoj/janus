@@ -36,12 +36,7 @@ class StoryActor(name: String = "", description: String = "") extends Actor
   with ActorLogging {
 
   log.info("Starting Story Actor")
-
-  initAttributes(
-    "name" -> name,
-    "description" -> description
-  )
-
+  override def attributes = Seq("name" -> name, "description" -> description)
   override val stages = Seq(WorkflowStage("analysis"), WorkflowStage("doing"))
 
   val tasks: mutable.Map[UUID, ActorRef] = mutable.Map.empty

@@ -10,10 +10,7 @@ class TaskActor(name: String = "", description: String = "") extends Actor with 
 
   log.info("Starting Task Actor")
 
-  initAttributes(
-    "name" -> name,
-    "description" -> description
-  )
+  override def attributes = Seq("name" -> name, "description" -> description)
 
   override def receive: Receive = taskReceive orElse behaviorReceive
 
@@ -24,5 +21,4 @@ class TaskActor(name: String = "", description: String = "") extends Actor with 
         case _ => self ! NotifyWatchers(message)
       }
   }
-
 }
