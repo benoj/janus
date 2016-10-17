@@ -15,8 +15,8 @@ trait WorkFlow extends BehaviorReceive{ self: Actor with ActorLogging =>
   override def behaviorReceive: Receive = workflowReceive orElse super.behaviorReceive
 
   def workflowReceive: Receive = {
-    case msg@ProgressUnit(unit: ActorRef) => workFlow ! msg
-    case msg@RegressUnit(unit: ActorRef) => workFlow ! msg
+    case msg@ProgressUnit(unit) => workFlow ! msg
+    case msg@RegressUnit(unit) => workFlow ! msg
   }
 
 }
