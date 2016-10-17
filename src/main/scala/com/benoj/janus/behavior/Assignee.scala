@@ -11,7 +11,7 @@ object Assignee {
 }
 
 trait Assignee extends BehaviorReceive{ self: Actor with ActorLogging =>
-  private[this] var assignee: Option[ActorRef] = None
+  private var assignee: Option[ActorRef] = None
 
   override def behaviorReceive: Receive = assigneeReceive orElse super.behaviorReceive
 
