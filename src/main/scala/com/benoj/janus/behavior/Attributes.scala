@@ -47,7 +47,7 @@ trait Attributes  extends BehaviorReceive{
 
   def attributes: Seq[TypedAttribute]
 
-  val attributeMap: mutable.Map[AttributeName, AttributeValue] = mutable.Map(attributes.map(attribute => attribute.name -> attribute.value):_*)
+  private val attributeMap: mutable.Map[AttributeName, AttributeValue] = mutable.Map(attributes.map(attribute => attribute.name -> attribute.value):_*)
 
   override def behaviorReceive = receiveAttributes orElse super.behaviorReceive
 
