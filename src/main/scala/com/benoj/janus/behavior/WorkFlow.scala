@@ -4,9 +4,15 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.benoj.janus.workflow.WorkflowActor
 import com.benoj.janus.workflow.WorkflowActor.Messages.{ProgressUnit, RegressUnit}
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
+import akka.pattern.ask
+import akka.util.Timeout
 
+import scala.concurrent.ExecutionContext
 
 trait WorkFlow extends BehaviorReceive{ self: Actor with ActorLogging =>
+
+  implicit val executionContext: ExecutionContext
+  implicit val timeout: Timeout
 
   protected[this] def stages: Seq[WorkflowStage]
 
@@ -15,8 +21,10 @@ trait WorkFlow extends BehaviorReceive{ self: Actor with ActorLogging =>
   override def behaviorReceive: Receive = workflowReceive orElse super.behaviorReceive
 
   def workflowReceive: Receive = {
-    case msg@ProgressUnit(unit) => workFlow ! msg
-    case msg@RegressUnit(unit) => workFlow ! msg
+    case msg@ProgressUnit(unit) =>
+      val responder = sender()
+      workFlow ? msg onSuccess { case msg@_ => responder ! msg }
+    case msg@RegressUnit(unit) => workFlow ? msg
   }
 
 }

@@ -36,6 +36,7 @@ class WorkflowActor(initialStages: Seq[WorkflowStage]) extends Actor with ActorL
     }
     case ProgressUnit(id) =>
       log.info(s"Progressing $id")
+      val responder = sender()
       stages.find(_.workUnits.contains(id)) match {
         case None =>
         case Some(stage) =>
@@ -44,6 +45,7 @@ class WorkflowActor(initialStages: Seq[WorkflowStage]) extends Actor with ActorL
             case i if i > currentStage =>
               stages(currentStage + 1).workUnits.append(id)
               stage.workUnits.remove(stage.workUnits.indexOf(id))
+              responder ! "OK"
             case _ =>
           }
       }

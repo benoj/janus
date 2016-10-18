@@ -14,11 +14,11 @@ import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 class StoryActor(name: String = "", description: String = "")
-                (implicit val timeout: Timeout, implicit val idSupplier: IdSupplier) extends Actor
+                (implicit val timeout: Timeout, val executionContext: ExecutionContext, idSupplier: IdSupplier) extends Actor
   with Attributes
   with Watchable
   with Assignee
@@ -37,15 +37,17 @@ class StoryActor(name: String = "", description: String = "")
 
   private def taskReceive: Receive = {
     case CreateTask(taskName, taskDescription) =>
+      log.info("Story received create task")
       val responder = sender()
       idSupplier.actor ? GetNextId onSuccess {
         case id@Id(_) =>
-          val task: ActorRef = context.actorOf(TaskActor.props(taskName, taskDescription))
-          workFlow ? AddWorkUnit(id) onSuccess {
-            case _ =>
+          val task: ActorRef = context.actorOf(TaskActor.props(taskName, taskDescription), s"task-${id.id}")
+          workFlow ? AddWorkUnit(id) onComplete  {
+            case Success(_) =>
               tasks(id) = task
               self ! NotifyWatchers(s"Task $id added to story")
               responder ! CreatedTask(id)
+            case Failure(e) => log.error(e, "add work unit failed")
           }
       }
     case NotificationMessage(message) =>
@@ -60,7 +62,8 @@ class StoryActor(name: String = "", description: String = "")
 
 object StoryActor {
 
-  def props(name: String = "", description: String = "")(implicit timeout: Timeout, idSupplier: IdSupplier) = Props(new StoryActor(name, description))
+  def props(name: String = "", description: String = "")
+           (implicit timeout: Timeout, executionContext: ExecutionContext,idSupplier: IdSupplier) = Props(new StoryActor(name, description))
 
   object Messages {
 

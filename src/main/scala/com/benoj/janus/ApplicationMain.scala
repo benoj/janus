@@ -6,20 +6,21 @@ import akka.actor._
 import akka.pattern.ask
 import com.benoj.janus.behavior.Attributes.Messages.UpdateAttribute
 import com.benoj.janus.behavior.Watchable.Messages.AddWatchers
-import com.benoj.janus.oraganisation.IdActor
-import com.benoj.janus.suppliers.Actors.IdSupplier
 import com.benoj.janus.workflow.WorkflowActor.Messages.ProgressUnit
-import com.benoj.janus.workunits.StoryActor
+import com.benoj.janus.workunits.ProjectActor
+import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, CreatedStory, UpdateStory}
 import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
+import com.benoj.janus.behavior.Attributes.implicits._
 
 class UserActor extends Actor with ActorLogging {
 
   log.info("User actor created")
 
   override def receive: Receive = {
-    case msg@_ => log.info(s"$msg")
+    case msg@_ => log.info(s"User recieved notification $msg")
   }
 
 }
@@ -27,27 +28,35 @@ class UserActor extends Actor with ActorLogging {
 object ApplicationMain extends App {
 
   import akka.util.Timeout
-  import com.benoj.janus.behavior.Attributes.implicits._
   val system = ActorSystem("Janus")
 
-  implicit val timeout = Timeout(30, TimeUnit.SECONDS)
-  implicit val idSupplier: IdSupplier = IdSupplier(system.actorOf(Props(classOf[IdActor], "org"), "id-supplier"))
+  implicit val timeout = Timeout(5, TimeUnit.SECONDS)
 
-  val storyActor: ActorRef = system.actorOf(StoryActor.props("", ""), "story")
-
-  val user: ActorRef = system.actorOf(Props[UserActor])
-
-  storyActor ! AddWatchers(Seq(user))
-
-  storyActor ! UpdateAttribute("name", "Get some work done")
+  val projectActor: ActorRef = system.actorOf(ProjectActor.props("Janus", "Open Source Task Manager"), "project")
 
 
-  val taskCreated = storyActor ? CreateTask("task", "description")
-  storyActor ? CreateTask("task", "description")
-  storyActor ? CreateTask("task", "description")
-  taskCreated.onSuccess {
-    case CreatedTask(task) => storyActor ! ProgressUnit(task)
+
+  projectActor ? CreateNewStoryInBacklog("Start Stuff","get stuff started") onSuccess {
+    case CreatedStory(id) =>
+      val user: ActorRef = system.actorOf(Props[UserActor])
+
+      projectActor ? UpdateStory(id, AddWatchers(Seq(user)))
+      projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
+
+      projectActor ? UpdateStory(id,CreateTask("task1", "description")) onSuccess {
+       case CreatedTask(taskId) =>
+         projectActor ? UpdateStory(id,ProgressUnit(taskId)) onComplete {
+           case Success(_) => println("Progress")
+           case Failure(e) => println(e,"Progress")
+         }
+     }
   }
+
+
+
+
+
+
 
   system.awaitTermination()
 }
