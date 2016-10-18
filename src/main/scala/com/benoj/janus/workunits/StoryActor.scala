@@ -4,8 +4,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.benoj.janus.behavior.Attributes.implicits._
-import com.benoj.janus.behavior.Notification.Messages.NotificationMessage
-import com.benoj.janus.behavior.Watchable.Messages.NotifyWatchers
 import com.benoj.janus.behavior.{Assignee, Attributes, Watchable, WorkFlow}
 import com.benoj.janus.oraganisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
@@ -45,15 +43,10 @@ class StoryActor(name: String = "", description: String = "")
           workFlow ? AddWorkUnit(id) onComplete  {
             case Success(_) =>
               tasks(id) = task
-              self ! NotifyWatchers(s"Task $id added to story")
               responder ! CreatedTask(id)
+              notifyWatchers(s"Task $id added to story")
             case Failure(e) => log.error(e, "add work unit failed")
           }
-      }
-    case NotificationMessage(message) =>
-      log.info("Received Notification")
-      message match {
-        case _ => self ! NotifyWatchers(message)
       }
   }
 

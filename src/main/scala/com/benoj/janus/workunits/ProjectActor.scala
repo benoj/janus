@@ -31,16 +31,10 @@ class ProjectActor(name: String, description: String)(implicit val timeout: Time
 
   def projectReceive: Receive = {
     case UpdateStory(id, msg) =>
-      val respondTo = sender()
       log.info(s"Update project story $id with $msg")
       backlog.get(id) match {
-        case None =>
-          log.error(s"Story $id not found")
-          respondTo ! StoryNotFound
-        case Some(story) =>
-          story ? msg onSuccess {
-            case m@_ => respondTo ! m //ToDO: Pass the responder context down to delegate
-          }
+        case None => sender() ! StoryNotFound
+        case Some(story) => story forward msg
       }
     case CreateNewStoryInBacklog(storyName, storyDescription) =>
       val respondTo = sender()
@@ -56,7 +50,6 @@ class ProjectActor(name: String, description: String)(implicit val timeout: Time
 
 object ProjectActor {
   def props(name: String = "", description: String = "")(implicit timeout: Timeout, executionContext: ExecutionContext) = Props(new ProjectActor(name, description))
-
 
   object Messages {
 

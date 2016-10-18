@@ -1,10 +1,10 @@
 package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging}
-import com.benoj.janus.behavior.Notification.Messages.NotificationMessage
+import com.benoj.janus.behavior.Watchable.Messages.NotifyWatchers
 
-import scala.language.implicitConversions
 import scala.collection._
+import scala.language.implicitConversions
 
 object Attributes {
 
@@ -61,7 +61,7 @@ trait Attributes  extends BehaviorReceive{
           case StringAttributeValue(value) => newValue match {
             case value@StringAttributeValue(_) =>
               log.info("Updating string attribute")
-              this.self ! NotificationMessage("Updated")
+              this.self ! NotifyWatchers(s"Attribute $attributeName Updated $newValue from $currentValue")
               attributeMap(attributeName) = value
           }
         }

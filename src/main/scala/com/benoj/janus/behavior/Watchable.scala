@@ -26,6 +26,11 @@ trait Watchable extends BehaviorReceive {
 
   override def behaviorReceive: Receive = receiveWatchers orElse super.behaviorReceive
 
+  def notifyWatchers(message: Any) = watchers.foreach { watcher =>
+    log.info(s"Notifying watcher $watcher")
+    watcher ! message
+  }
+
   private def receiveWatchers: Receive = {
     case AddWatchers(watchersToAdd) =>
       log.info("Adding Watcher")
@@ -33,11 +38,7 @@ trait Watchable extends BehaviorReceive {
     case RemoveWatchers(watchersToRemove) =>
       log.info("Removing Watcher")
       watchers --= watchers.filter(watchersToRemove.contains(_))
-    case NotifyWatchers(message) =>
-      watchers.foreach((watcher) => {
-        log.info(s"Notifying watcher $watcher")
-        watcher ! message
-      })
+    case NotifyWatchers(message) => notifyWatchers(message)
   }
 
 }
