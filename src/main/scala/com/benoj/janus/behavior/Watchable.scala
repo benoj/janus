@@ -1,20 +1,21 @@
 package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import scala.collection.mutable
+import com.benoj.janus.behavior.Watchable.WatcherState
+
 
 object Watchable {
 
   object Messages {
-
-    case class AddWatchers(watchers: Seq[ActorRef])
-
-    case class RemoveWatchers(watcher: Seq[ActorRef])
-
+    case class AddWatchers(watchers: Set[ActorRef])
+    case class RemoveWatchers(watcher: Set[ActorRef])
     case class NotifyWatchers(message: Any)
-
   }
 
+  case class WatcherState(watchers: Set[ActorRef] = Set.empty) {
+    def add(newWatchers: Set[ActorRef]) = copy(watchers ++ newWatchers)
+    def remove(watchersToDelete: Set[ActorRef]) = copy(watchers -- watchersToDelete)
+  }
 }
 
 trait Watchable extends BehaviorReceive {
@@ -22,11 +23,11 @@ trait Watchable extends BehaviorReceive {
 
   import com.benoj.janus.behavior.Watchable.Messages._
 
-  private val watchers: mutable.Buffer[ActorRef] = mutable.Buffer.empty
+  private var state = WatcherState()
 
   override def behaviorReceive: Receive = receiveWatchers orElse super.behaviorReceive
 
-  def notifyWatchers(message: Any) = watchers.foreach { watcher =>
+  def notifyWatchers(message: Any) = state.watchers.foreach { watcher =>
     log.info(s"Notifying watcher $watcher")
     watcher ! message
   }
@@ -34,10 +35,10 @@ trait Watchable extends BehaviorReceive {
   private def receiveWatchers: Receive = {
     case AddWatchers(watchersToAdd) =>
       log.info("Adding Watcher")
-      watchers ++= watchersToAdd
+      state = state.add(watchersToAdd)
     case RemoveWatchers(watchersToRemove) =>
       log.info("Removing Watcher")
-      watchers --= watchers.filter(watchersToRemove.contains(_))
+      state = state.remove(watchersToRemove)
     case NotifyWatchers(message) => notifyWatchers(message)
   }
 
