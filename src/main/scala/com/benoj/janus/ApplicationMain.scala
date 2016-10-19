@@ -15,6 +15,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import com.benoj.janus.behavior.Attributes.implicits._
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 class UserActor extends Actor with ActorLogging {
 
   log.info("User actor created")
@@ -40,7 +43,7 @@ object ApplicationMain extends App {
     case CreatedStory(id) =>
       val user: ActorRef = system.actorOf(Props[UserActor])
 
-      projectActor ? UpdateStory(id, AddWatchers(Seq(user)))
+      projectActor ? UpdateStory(id, AddWatchers(Set(user)))
       projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
 
       projectActor ? UpdateStory(id,CreateTask("task1", "description")) onSuccess {
@@ -52,11 +55,5 @@ object ApplicationMain extends App {
      }
   }
 
-
-
-
-
-
-
-  system.awaitTermination()
+  Await.ready(system.whenTerminated, Duration.Inf)
 }

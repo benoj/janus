@@ -25,7 +25,7 @@ class StoryActor(name: String = "", description: String = "")
 
   log.info("Starting Story Actor")
 
-  override def attributes = Seq("name" -> name, "description" -> description)
+  override def attributes = Map("name" -> name, "description" -> description)
 
   override val stages = Seq(WorkflowStage("analysis"), WorkflowStage("doing"))
 

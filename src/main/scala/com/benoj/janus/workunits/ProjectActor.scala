@@ -21,7 +21,7 @@ class ProjectActor(name: String, description: String)(implicit val timeout: Time
 
   implicit val idSupplier: IdSupplier = IdSupplier(context.actorOf(Props(classOf[IdActor], name), s"project-$name-id-supplier"))
 
-  override def attributes = Seq("name" -> name, "description" -> description)
+  override def attributes = Map("name" -> name, "description" -> description)
 
   override def stages = Seq(WorkflowStage("analysis"), WorkflowStage("doing"))
 

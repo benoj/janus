@@ -12,7 +12,7 @@ class TaskActor(name: String = "", description: String = "") extends Actor
 
   log.info("Starting Task Actor")
 
-  override def attributes = Seq("name" -> name, "description" -> description)
+  override def attributes = Map("name" -> name, "description" -> description)
 
   override def receive: Receive = behaviorReceive
 
