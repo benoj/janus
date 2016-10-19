@@ -5,8 +5,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.benoj.janus.behavior.Attributes.implicits._
 import com.benoj.janus.behavior.{Attributes, WorkFlow}
-import com.benoj.janus.oraganisation.IdActor
-import com.benoj.janus.oraganisation.IdActor.Messages.{GetNextId, Id}
+import com.benoj.janus.organisation.IdActor
+import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, CreatedStory, StoryNotFound, UpdateStory}

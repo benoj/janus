@@ -1,7 +1,7 @@
 package com.benoj.janus.workflow
 
 import akka.actor.{Actor, ActorLogging}
-import com.benoj.janus.oraganisation.IdActor.Messages.Id
+import com.benoj.janus.organisation.IdActor.Messages.Id
 import com.benoj.janus.workflow.WorkflowActor.Messages._
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 

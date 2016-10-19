@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.benoj.janus.behavior.Attributes.implicits._
 import com.benoj.janus.behavior.{Assignee, Attributes, Watchable, WorkFlow}
-import com.benoj.janus.oraganisation.IdActor.Messages.{GetNextId, Id}
+import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
 import com.benoj.janus.workflow.WorkflowActor.Messages.AddWorkUnit
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage

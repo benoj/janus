@@ -1,10 +1,10 @@
-package com.benoj.janus.oraganisation
+package com.benoj.janus.organisation
 
 import akka.actor.Actor
 
 
 class IdActor(organisationPrefix: String) extends Actor {
-  import com.benoj.janus.oraganisation.IdActor.Messages.{GetNextId, Id}
+  import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 
   private var currentCount: Long = 0
 
