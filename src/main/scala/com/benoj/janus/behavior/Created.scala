@@ -13,18 +13,21 @@ object Created {
 
 trait Created { self: Actor with ActorLogging with BehaviorReceive =>
 
-  def postCreation: Receive = {
+
+  private def exists: Receive = {
     case `Exist?` => Created
   }
+
+  def postCreation: Receive
 
   override def receive: Receive = {
     case Create(id) =>
       log.info(s"Creating ${this.getClass.getName}")
-      context.become(postCreation orElse behaviorReceive)
+      context.become(postCreation orElse exists orElse behaviorReceive)
       log.info(s"${sender()}")
       sender() ! Created.Created(id)
-    case _ =>
-      log.info(s"Attempting to send message with non existing actor.")
+    case msg@_ =>
+      log.info(s"Attempting to send message $msg with non existing actor ${this.self.path.name}")
       sender() ! NotFound
   }
 

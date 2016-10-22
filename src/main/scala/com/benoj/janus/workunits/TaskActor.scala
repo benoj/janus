@@ -16,6 +16,7 @@ class TaskActor(name: String = "", description: String = "") extends Actor
 
   override def attributes = Map("name" -> name, "description" -> description)
 
+  override def postCreation: Receive = PartialFunction.empty
 }
 
 object TaskActor{

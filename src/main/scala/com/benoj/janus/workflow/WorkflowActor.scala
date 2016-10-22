@@ -1,7 +1,6 @@
 package com.benoj.janus.workflow
 
-import akka.actor.{Actor, ActorLogging, Props}
-import com.benoj.janus.behavior.Created.Create
+import akka.actor.{Actor, ActorLogging}
 import com.benoj.janus.workflow.WorkflowActor.Messages._
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 
@@ -11,7 +10,7 @@ object WorkflowActor {
   case class WorkflowStage(name: String, workUnits: mutable.Buffer[String] = mutable.Buffer.empty)
 
   object Messages {
-    case class AddWorkUnit(props: Props, id: String)
+    case class AddWorkUnit(id: String)
     case class DeleteWorkUnit(id: String)
     case class ProgressUnit(id: String)
     case class RegressUnit(id: String)
@@ -24,10 +23,9 @@ class WorkflowActor(initialStages: Seq[WorkflowStage]) extends Actor with ActorL
   private val stages: mutable.Buffer[WorkflowStage] = initialStages.toBuffer
 
   override def receive: Receive = {
-    case AddWorkUnit(props, id) =>
+    case AddWorkUnit(id) =>
       log.info(s"Adding $id to workflow")
       stages.head.workUnits.append(id)
-      context.actorOf(props) forward Create(id)
     case DeleteWorkUnit(id) => stages.find(_.workUnits.contains(id)) match {
       case Some(stage) =>
         log.info(s"Removing $id")
