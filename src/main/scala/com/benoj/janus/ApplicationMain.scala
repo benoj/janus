@@ -6,11 +6,14 @@ import java.util.logging.Logger
 import akka.actor._
 import akka.event.Logging
 import akka.pattern.ask
+import com.benoj.janus.behavior.Attributes.Messages.UpdateAttribute
 import com.benoj.janus.behavior.Created.{Create, Created}
+import com.benoj.janus.behavior.Watchable.Messages.AddWatchers
 import com.benoj.janus.workflow.WorkflowActor.Messages.ProgressUnit
 import com.benoj.janus.workunits.ProjectActor
 import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, UpdateStory}
 import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
+import com.benoj.janus.behavior.Attributes.implicits._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,10 +45,10 @@ object ApplicationMain extends App {
   projectActor ? Create("janus") onSuccess {
     case _ => projectActor ? CreateNewStoryInBacklog("Start Stuff", "get stuff started") onSuccess {
       case Created(id) =>
-        //      val user: ActorRef = system.actorOf(Props[UserActor])
+              val user: ActorRef = system.actorOf(Props[UserActor])
 
-        //      projectActor ? UpdateStory(id, AddWatchers(Set(user)))
-        //      projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
+              projectActor ? UpdateStory(id, AddWatchers(Set(user)))
+              projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
 
         projectActor ? UpdateStory(id, CreateTask("task1", "description")) onComplete  {
           case Success(Created(taskId)) =>
