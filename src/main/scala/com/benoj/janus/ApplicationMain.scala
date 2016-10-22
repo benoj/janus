@@ -41,10 +41,10 @@ object ApplicationMain extends App {
 
   projectActor ? CreateNewStoryInBacklog("Start Stuff","get stuff started") onSuccess {
     case CreatedStory(id) =>
-      val user: ActorRef = system.actorOf(Props[UserActor])
+//      val user: ActorRef = system.actorOf(Props[UserActor])
 
-      projectActor ? UpdateStory(id, AddWatchers(Set(user)))
-      projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
+//      projectActor ? UpdateStory(id, AddWatchers(Set(user)))
+//      projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
 
       projectActor ? UpdateStory(id,CreateTask("task1", "description")) onSuccess {
        case CreatedTask(taskId) =>

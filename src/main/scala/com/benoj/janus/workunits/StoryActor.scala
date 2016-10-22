@@ -9,6 +9,7 @@ import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
 import com.benoj.janus.workflow.WorkflowActor.Messages.AddWorkUnit
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
+import com.benoj.janus.workunits.Created.Create
 import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
 
 import scala.collection.mutable
@@ -39,10 +40,10 @@ class StoryActor(name: String = "", description: String = "")
       val responder = sender()
       idSupplier.actor ? GetNextId onSuccess {
         case id@Id(_) =>
-          val task: ActorRef = context.actorOf(TaskActor.props(taskName, taskDescription), s"task-${id.id}")
+          val task = context.actorOf(TaskActor.props(taskName, taskDescription), s"task-${id.id}")
+          task ! Create
           workFlow ? AddWorkUnit(id) onComplete  {
             case Success(_) =>
-              tasks(id) = task
               responder ! CreatedTask(id)
               notifyWatchers(s"Task $id added to story")
             case Failure(e) => log.error(e, "add work unit failed")
