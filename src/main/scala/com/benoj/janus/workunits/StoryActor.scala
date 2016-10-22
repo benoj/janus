@@ -35,9 +35,8 @@ class StoryActor(name: String = "", description: String = "")
       val responder = sender()
       idSupplier.actor ? GetNextId onComplete {
         case Success(Id(id)) =>
-          val taskName: String = s"task-$id"
-          val task: ActorRef = context.actorOf(TaskActor.props(taskName, taskDescription), taskName)
-          workFlow ! AddWorkUnit(taskName)
+          val task: ActorRef = context.actorOf(TaskActor.props(taskName, taskDescription), s"task-$id")
+          workFlow ! AddWorkUnit(id)
           task tell(Create(id), responder)
         case e@_ =>
           log.error(s"Unable to get next ID. Cause $e")

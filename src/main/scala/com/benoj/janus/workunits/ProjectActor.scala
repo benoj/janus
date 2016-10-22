@@ -54,8 +54,6 @@ object ProjectActor {
 
   object Messages {
 
-    case class CreatedStory(id: Id)
-
     case class CreateNewStoryInBacklog(name: String, description: String)
 
     case class UpdateStory(id: String, msg: Any)

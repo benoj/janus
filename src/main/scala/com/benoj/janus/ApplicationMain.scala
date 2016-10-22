@@ -9,7 +9,7 @@ import akka.pattern.ask
 import com.benoj.janus.behavior.Created.{Create, Created}
 import com.benoj.janus.workflow.WorkflowActor.Messages.ProgressUnit
 import com.benoj.janus.workunits.ProjectActor
-import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, CreatedStory, UpdateStory}
+import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, UpdateStory}
 import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
 
 import scala.concurrent.Await
@@ -50,10 +50,10 @@ object ApplicationMain extends App {
         projectActor ? UpdateStory(id, CreateTask("task1", "description")) onComplete  {
           case Success(Created(taskId)) =>
             projectActor ? UpdateStory(id, ProgressUnit(taskId)) onComplete {
-              case Success(_) => println("Progress")
-              case Failure(e) => println(s"Nooop $e")
+              case Success(_) => log.info("Progress")
+              case Failure(e) => log.error(e, s"Nooop")
             }
-          case e@_ => log.error(s"$e")
+          case e@_ => log.error(s"Failed to update Story $e")
         }
     }
   }
