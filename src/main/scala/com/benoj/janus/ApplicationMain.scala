@@ -4,19 +4,16 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor._
 import akka.pattern.ask
-import com.benoj.janus.behavior.Attributes.Messages.UpdateAttribute
-import com.benoj.janus.behavior.Watchable.Messages.AddWatchers
+import com.benoj.janus.behavior.Created.Created
 import com.benoj.janus.workflow.WorkflowActor.Messages.ProgressUnit
 import com.benoj.janus.workunits.ProjectActor
 import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, CreatedStory, UpdateStory}
-import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
-import com.benoj.janus.behavior.Attributes.implicits._
+import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success}
 
 class UserActor extends Actor with ActorLogging {
 
@@ -47,10 +44,10 @@ object ApplicationMain extends App {
 //      projectActor ? UpdateStory(id, UpdateAttribute("name", "Get some work done"))
 
       projectActor ? UpdateStory(id,CreateTask("task1", "description")) onSuccess {
-       case CreatedTask(taskId) =>
+       case Created(taskId) =>
          projectActor ? UpdateStory(id,ProgressUnit(taskId)) onComplete {
            case Success(_) => println("Progress")
-           case Failure(e) => println(e,"Progress")
+           case Failure(e) => println(s"Nooop $e")
          }
      }
   }

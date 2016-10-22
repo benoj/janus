@@ -4,13 +4,12 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.benoj.janus.behavior.Attributes.implicits._
-import com.benoj.janus.behavior.{Assignee, Attributes, Watchable, WorkFlow}
+import com.benoj.janus.behavior._
 import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
 import com.benoj.janus.workflow.WorkflowActor.Messages.AddWorkUnit
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
-import com.benoj.janus.workunits.Created.Create
-import com.benoj.janus.workunits.StoryActor.Messages.{CreateTask, CreatedTask}
+import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
@@ -18,6 +17,7 @@ import scala.util.{Failure, Success}
 
 class StoryActor(name: String = "", description: String = "")
                 (implicit val timeout: Timeout, val executionContext: ExecutionContext, idSupplier: IdSupplier) extends Actor
+  with Created
   with Attributes
   with Watchable
   with Assignee
@@ -32,38 +32,28 @@ class StoryActor(name: String = "", description: String = "")
 
   private val tasks: mutable.Map[Id, ActorRef] = mutable.Map.empty
 
-  override def receive: Receive = taskReceive orElse behaviorReceive
-
-  private def taskReceive: Receive = {
+  override def postCreation = {
     case CreateTask(taskName, taskDescription) =>
       log.info("Story received create task")
       val responder = sender()
-      idSupplier.actor ? GetNextId onSuccess {
-        case id@Id(_) =>
-          val task = context.actorOf(TaskActor.props(taskName, taskDescription), s"task-${id.id}")
-          task ! Create
-          workFlow ? AddWorkUnit(id) onComplete  {
-            case Success(_) =>
-              responder ! CreatedTask(id)
-              notifyWatchers(s"Task $id added to story")
-            case Failure(e) => log.error(e, "add work unit failed")
-          }
+      idSupplier.actor ? GetNextId onComplete {
+        case Success(id@Id(_)) =>
+          workFlow.tell(AddWorkUnit(TaskActor.props(taskName, taskDescription), s"task-${id.id}"), responder)
+        case Failure(e) =>
+          log.error(s"Unable to get next ID. Cause $e")
       }
   }
-
 }
 
 
 object StoryActor {
 
   def props(name: String = "", description: String = "")
-           (implicit timeout: Timeout, executionContext: ExecutionContext,idSupplier: IdSupplier) = Props(new StoryActor(name, description))
+           (implicit timeout: Timeout, executionContext: ExecutionContext, idSupplier: IdSupplier) = Props(new StoryActor(name, description))
 
   object Messages {
 
     case class CreateTask(name: String = "", description: String = "")
-
-    case class CreatedTask(id: Id)
 
   }
 

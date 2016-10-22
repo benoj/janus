@@ -19,6 +19,7 @@ class ProjectActor(name: String, description: String)(implicit val timeout: Time
   with WorkFlow
   with ActorLogging {
 
+  log.info("Creating project")
   implicit val idSupplier: IdSupplier = IdSupplier(context.actorOf(Props(classOf[IdActor], name), s"project-$name-id-supplier"))
 
   override def attributes = Map("name" -> name, "description" -> description)

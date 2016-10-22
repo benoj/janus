@@ -1,20 +1,20 @@
 package com.benoj.janus.workflow
 
-import akka.actor.{Actor, ActorLogging}
-import com.benoj.janus.organisation.IdActor.Messages.Id
+import akka.actor.{Actor, ActorLogging, Props}
+import com.benoj.janus.behavior.Created.Create
 import com.benoj.janus.workflow.WorkflowActor.Messages._
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 
 import scala.collection.mutable
 
 object WorkflowActor {
-  case class WorkflowStage(name: String, workUnits: mutable.Buffer[Id] = mutable.Buffer.empty)
+  case class WorkflowStage(name: String, workUnits: mutable.Buffer[String] = mutable.Buffer.empty)
 
   object Messages {
-    case class AddWorkUnit(id: Id)
-    case class DeleteWorkUnit(id: Id)
-    case class ProgressUnit(id: Id)
-    case class RegressUnit(id: Id)
+    case class AddWorkUnit(props: Props, id: String)
+    case class DeleteWorkUnit(id: String)
+    case class ProgressUnit(id: String)
+    case class RegressUnit(id: String)
   }
 }
 
@@ -24,10 +24,10 @@ class WorkflowActor(initialStages: Seq[WorkflowStage]) extends Actor with ActorL
   private val stages: mutable.Buffer[WorkflowStage] = initialStages.toBuffer
 
   override def receive: Receive = {
-    case AddWorkUnit(id) =>
+    case AddWorkUnit(props, id) =>
       log.info(s"Adding $id to workflow")
       stages.head.workUnits.append(id)
-      sender() ! "OK"
+      context.actorOf(props) forward Create(id)
     case DeleteWorkUnit(id) => stages.find(_.workUnits.contains(id)) match {
       case Some(stage) =>
         log.info(s"Removing $id")
