@@ -1,8 +1,5 @@
 package com.benoj.janus.workflow
 
-import akka.actor.Actor.Receive
-import akka.actor.ActorLogging
-import akka.persistence.{PersistentActor, RecoveryCompleted}
 import cats.data.Xor
 import com.benoj.janus.Events._
 import com.benoj.janus.PersistentLoggingActor
@@ -79,11 +76,6 @@ object WorkflowActor {
   }
 
 }
-
-
-
-
-
 
 class WorkflowActor(initialStages: Seq[WorkflowStage]) extends PersistentLoggingActor
   with JanusEventProcessing {

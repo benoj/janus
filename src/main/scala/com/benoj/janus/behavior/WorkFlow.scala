@@ -2,13 +2,14 @@ package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
+import com.benoj.janus.PersistentLoggingActor
 import com.benoj.janus.workflow.WorkflowActor
 import com.benoj.janus.workflow.WorkflowActor.Commands.{ProgressUnit, RegressUnit}
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 
 import scala.concurrent.ExecutionContext
 
-trait WorkFlow extends BehaviorReceive{ self: Actor with ActorLogging =>
+trait WorkFlow extends JanusEventProcessing { self: PersistentLoggingActor =>
 
   implicit val executionContext: ExecutionContext
   implicit val timeout: Timeout
@@ -23,11 +24,12 @@ trait WorkFlow extends BehaviorReceive{ self: Actor with ActorLogging =>
     }
   }
 
-  override def behaviorReceive: Receive = workflowReceive orElse super.behaviorReceive
-
   def workflowReceive: Receive = {
-    case msg@ProgressUnit(unit) =>workFlow forward msg
+    case msg@ProgressUnit(unit) => workFlow forward msg
     case msg@RegressUnit(unit) => workFlow forward msg
   }
+
+  override def processCommand: Receive = workflowReceive orElse super.processCommand
+
 
 }

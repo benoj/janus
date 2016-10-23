@@ -2,7 +2,10 @@ package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging}
 import cats.data.Xor
-import com.benoj.janus.behavior.Watchable.Messages.NotifyWatchers
+import com.benoj.janus.Events._
+import com.benoj.janus.PersistentLoggingActor
+import com.benoj.janus.behavior.Attributes.Events.AttributeUpdated
+import com.benoj.janus.behavior.Watchable.Commands.NotifyWatchers
 
 import scala.collection._
 import scala.language.implicitConversions
@@ -14,14 +17,25 @@ object Attributes {
   }
 
   sealed abstract class AttributeValue(val value: Any)
+
   case class StringAttributeValue(override val value: String) extends AttributeValue(value)
 
-  object Messages {
+  object Commands {
+
     case class UpdateAttribute(attributeName: String, attributeValue: AttributeValue)
+
+  }
+
+  object Events {
+
+    case class AttributeUpdated(attributeName: String, attributeValue: AttributeValue) extends JanusEvent
+
   }
 
   abstract class FailedToUpdateAttribute
+
   case object IncompatableTypeUpdate extends FailedToUpdateAttribute
+
   case class UnknownAttribute(attributeName: String) extends FailedToUpdateAttribute
 
   case class AttributeState(attributes: Map[String, AttributeValue] = Map.empty) {
@@ -36,30 +50,38 @@ object Attributes {
       }
     }
   }
+
 }
 
-trait Attributes extends BehaviorReceive {
-  self: Actor with ActorLogging =>
+trait Attributes extends JanusEventProcessing {
+  self: PersistentLoggingActor =>
 
-  import com.benoj.janus.behavior.Attributes.Messages._
+  import com.benoj.janus.behavior.Attributes.Commands._
   import com.benoj.janus.behavior.Attributes._
 
   def attributes: Map[String, AttributeValue]
 
   private var state: AttributeState = AttributeState(attributes)
 
-  override def behaviorReceive = receiveAttributes orElse super.behaviorReceive
-
-  private def receiveAttributes: Receive = {
-    case UpdateAttribute(attributeName, newValue) => state.update(attributeName, newValue) match {
-        case Xor.Right(updatedState) =>
-          log.info("Updating string attribute")
-          this.self ! NotifyWatchers(s"Attribute $attributeName Updated $newValue")
+  override def processEvent: ReceiveEvent = {
+    case AttributeUpdated(attributeName, newValue) => state.update(attributeName, newValue) match {
+      case Xor.Right(updatedState) =>
+        Xor.Right {
           state = updatedState
-        case Xor.Left(error) =>
-          log.warning(s"Error updating attribute $error")
-          sender() ! error
+        }
+      case Xor.Left(e) =>
+        log.error(s"Error updating attribute $e")
+        Xor.Left(Failed(e))
     }
+  }
+
+  override def processCommand: Receive = attributeProcessCommand orElse super.processCommand
+
+  def attributeProcessCommand: Receive = {
+    case UpdateAttribute(attributeName, newValue) =>
+      processEventAndNotifySender(AttributeUpdated(attributeName, newValue))
+      this.self ! NotifyWatchers(s"Attribute $attributeName Updated $newValue")
+
   }
 }
 

@@ -1,23 +1,35 @@
 package com.benoj.janus.behavior
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import com.benoj.janus.behavior.Assignee.Messages.UpdateAssignee
+import cats.data.Xor
+import com.benoj.janus.Events.{JanusEvent, ReceiveEvent}
+import com.benoj.janus.PersistentLoggingActor
+import com.benoj.janus.behavior.Assignee.Commands.UpdateAssignee
+import com.benoj.janus.behavior.Assignee.Events.AssigneeUpdated
 
 
 object Assignee {
-  object Messages {
+  object Commands {
     case class UpdateAssignee(assignee: ActorRef)
+  }
+
+  object Events {
+    case class AssigneeUpdated(assignee: ActorRef) extends JanusEvent
   }
 }
 
-trait Assignee extends BehaviorReceive{ self: Actor with ActorLogging =>
+trait Assignee extends JanusEventProcessing { self: PersistentLoggingActor =>
   private var assignee: Option[ActorRef] = None
 
-  override def behaviorReceive: Receive = assigneeReceive orElse super.behaviorReceive
-
-  private def assigneeReceive: Receive = {
-    case UpdateAssignee(actorRef) =>
+  override def processEvent: ReceiveEvent = {
+    case AssigneeUpdated(actorRef) =>
       log.info(s"updating assignee")
-      assignee = Some(actorRef)
+      Xor.Right { assignee = Some(actorRef) }
+  }
+
+  override def processCommand: Receive = assigneeProcessCommand orElse super.processCommand
+
+  def assigneeProcessCommand: Receive = {
+    case UpdateAssignee(actorRef) => processEventAndNotifySender(AssigneeUpdated(actorRef))
   }
 }

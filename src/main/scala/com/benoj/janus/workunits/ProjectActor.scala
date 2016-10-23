@@ -1,11 +1,12 @@
 package com.benoj.janus.workunits
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.benoj.janus.PersistentLoggingActor
 import com.benoj.janus.behavior.Attributes.implicits._
 import com.benoj.janus.behavior.Created.Create
-import com.benoj.janus.behavior.{Attributes, Created, WorkFlow}
+import com.benoj.janus.behavior.{Attributes, Created, JanusEventProcessing, WorkFlow}
 import com.benoj.janus.organisation.IdActor
 import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
@@ -14,11 +15,12 @@ import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog,
 
 import scala.concurrent.ExecutionContext
 
-class ProjectActor(description: String)(implicit val timeout: Timeout, val executionContext: ExecutionContext) extends Actor
-  with Created
-  with Attributes
-  with WorkFlow
-  with ActorLogging {
+class ProjectActor(description: String)(implicit val timeout: Timeout, val executionContext: ExecutionContext)
+  extends PersistentLoggingActor
+    with JanusEventProcessing
+    with Attributes
+    with WorkFlow
+    with Created {
 
   log.info(s"Creating project ${self.path.name}")
   implicit val idSupplier: IdSupplier = IdSupplier(context.actorOf(Props(classOf[IdActor], self.path.name), s"project-${self.path.name}-id-supplier"))

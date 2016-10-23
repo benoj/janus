@@ -1,8 +1,9 @@
 package com.benoj.janus.workunits
 
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
+import com.benoj.janus.PersistentLoggingActor
 import com.benoj.janus.behavior.Attributes.implicits._
 import com.benoj.janus.behavior.Created.Create
 import com.benoj.janus.behavior._
@@ -16,13 +17,14 @@ import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class StoryActor(name: String = "", description: String = "")
-                (implicit val timeout: Timeout, val executionContext: ExecutionContext, idSupplier: IdSupplier) extends Actor
-  with Created
+                (implicit val timeout: Timeout, val executionContext: ExecutionContext, idSupplier: IdSupplier)
+  extends PersistentLoggingActor
+  with JanusEventProcessing
   with Attributes
   with Watchable
   with Assignee
   with WorkFlow
-  with ActorLogging {
+  with Created {
 
   log.info("Starting Story Actor")
 

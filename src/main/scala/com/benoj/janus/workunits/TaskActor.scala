@@ -1,16 +1,16 @@
 package com.benoj.janus.workunits
 
 import akka.actor.{Actor, ActorLogging, Props}
+import com.benoj.janus.PersistentLoggingActor
 import com.benoj.janus.behavior.Attributes.implicits._
-import com.benoj.janus.behavior.{Assignee, Attributes, Created, Watchable}
+import com.benoj.janus.behavior._
 
 
-class TaskActor(name: String = "", description: String = "") extends Actor
+class TaskActor(name: String = "", description: String = "") extends PersistentLoggingActor with JanusEventProcessing
   with Created
   with Attributes
   with Watchable
-  with Assignee
-  with ActorLogging {
+  with Assignee {
 
   log.info("Starting Task Actor")
 

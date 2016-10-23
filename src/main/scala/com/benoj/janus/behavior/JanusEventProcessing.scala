@@ -11,7 +11,7 @@ trait  CommandProcess {
   def processCommand: Receive = PartialFunction.empty
 }
 
-trait JanusEventProcessing extends CommandProcess {self: PersistentLoggingActor =>
+trait JanusEventProcessing extends CommandProcess { self: PersistentLoggingActor =>
   override def persistenceId: String = this.self.path.name
 
   def processEvent: ReceiveEvent = PartialFunction.empty
@@ -21,13 +21,13 @@ trait JanusEventProcessing extends CommandProcess {self: PersistentLoggingActor 
     case RecoveryCompleted => log.info("Recovered Actor")
   }
 
-  def processEventAndNotifySender(event: JanusEvent) = processEvent(event) match {
+  def processEventAndNotifySender(event: JanusEvent): Unit = processEvent(event) match {
     case Xor.Right(_) =>
       sender() ! "OK"
     case Xor.Left(e) =>
       sender() ! e
   }
 
-  override def receiveCommand: Receive = processCommand orElse super.processCommand
+  override def receiveCommand: Receive = processCommand
 
 }
