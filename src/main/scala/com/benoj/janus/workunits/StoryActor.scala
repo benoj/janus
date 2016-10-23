@@ -1,6 +1,6 @@
 package com.benoj.janus.workunits
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.benoj.janus.behavior.Attributes.implicits._
@@ -8,7 +8,7 @@ import com.benoj.janus.behavior.Created.Create
 import com.benoj.janus.behavior._
 import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
-import com.benoj.janus.workflow.WorkflowActor.Messages.AddWorkUnit
+import com.benoj.janus.workflow.WorkflowActor.Commands.AddWorkUnit
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
 import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
 
@@ -25,6 +25,7 @@ class StoryActor(name: String = "", description: String = "")
   with ActorLogging {
 
   log.info("Starting Story Actor")
+
   override def attributes = Map("name" -> name, "description" -> description)
 
   override val stages = Seq(WorkflowStage("analysis"), WorkflowStage("doing"))
@@ -34,10 +35,9 @@ class StoryActor(name: String = "", description: String = "")
       log.info("Story received create task")
       val responder = sender()
       idSupplier.actor ? GetNextId onComplete {
-        case Success(Id(id)) =>
-          val task: ActorRef = context.actorOf(TaskActor.props(taskName, taskDescription), s"task-$id")
-          workFlow ! AddWorkUnit(id)
-          task tell(Create(id), responder)
+        case Success(Id(id)) => workFlow ? AddWorkUnit(id) onSuccess {
+          case _ => context.actorOf(TaskActor.props(taskName, taskDescription), s"task-$id") tell(Create(id), responder)
+        }
         case e@_ =>
           log.error(s"Unable to get next ID. Cause $e")
       }
@@ -51,7 +51,9 @@ object StoryActor {
            (implicit timeout: Timeout, executionContext: ExecutionContext, idSupplier: IdSupplier) = Props(new StoryActor(name, description))
 
   object Messages {
+
     case class CreateTask(name: String = "", description: String = "")
+
   }
 
 }

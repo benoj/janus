@@ -9,7 +9,7 @@ import akka.pattern.ask
 import com.benoj.janus.behavior.Attributes.Messages.UpdateAttribute
 import com.benoj.janus.behavior.Created.{Create, Created}
 import com.benoj.janus.behavior.Watchable.Messages.AddWatchers
-import com.benoj.janus.workflow.WorkflowActor.Messages.ProgressUnit
+import com.benoj.janus.workflow.WorkflowActor.Commands.ProgressUnit
 import com.benoj.janus.workunits.ProjectActor
 import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, UpdateStory}
 import com.benoj.janus.workunits.StoryActor.Messages.CreateTask
@@ -39,7 +39,7 @@ object ApplicationMain extends App {
 
   val log = Logging.getLogger(system, this)
 
-  implicit val timeout = Timeout(5, TimeUnit.SECONDS)
+  implicit val timeout = Timeout(30, TimeUnit.SECONDS)
 
   val projectActor: ActorRef = system.actorOf(ProjectActor.props("Open Source Task Manager"), "janus")
   projectActor ? Create("janus") onSuccess {
@@ -52,10 +52,14 @@ object ApplicationMain extends App {
 
         projectActor ? UpdateStory(id, CreateTask("task1", "description")) onComplete  {
           case Success(Created(taskId)) =>
-            projectActor ? UpdateStory(id, ProgressUnit(taskId)) onComplete {
+            projectActor ? UpdateStory(id, CreateTask("task2", "description")) onComplete {
               case Success(_) => log.info("Progress")
               case Failure(e) => log.error(e, s"Nooop")
             }
+//            projectActor ? UpdateStory(id, ProgressUnit(taskId)) onComplete {
+//              case Success(_) => log.info("Progress")
+//              case Failure(e) => log.error(e, s"Nooop")
+//            }
           case e@_ => log.error(s"Failed to update Story $e")
         }
     }
