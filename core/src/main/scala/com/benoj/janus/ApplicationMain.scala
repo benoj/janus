@@ -41,7 +41,7 @@ object ApplicationMain extends App {
 
   implicit val timeout = Timeout(15, TimeUnit.SECONDS)
 
-  val projectActor: ActorRef = system.actorOf(ProjectActor.props("Open Source Task Manager"), "janus")
+  val projectActor= system.actorOf(ProjectActor.props("Open Source Task Manager"), "janus")
   private val future: Future[Any] = projectActor ? Create("janus")
 
   future onFailure {
@@ -51,7 +51,7 @@ object ApplicationMain extends App {
     case _ =>
       projectActor ? CreateNewStoryInBacklog("Start Stuff", "get stuff started") onSuccess {
       case Created(id) =>
-        val user: ActorRef = system.actorOf(Props[UserActor])
+        val user = system.actorOf(Props[UserActor])
 
         projectActor ? UpdateStory(id, AddWatchers(Set(user))) onComplete {
           case Success(_) =>
