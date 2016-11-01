@@ -1,15 +1,14 @@
 package com.benoj.janus.behavior
 
 import com.benoj.janus.PersistentLoggingActor
-import com.benoj.janus.behavior.Created.{Create, NotFound, `Exist?`}
+import com.benoj.janus.behavior.Created.{Create, `Exist?`}
+import com.benoj.janus.common.NotFound
 
 object Created {
 
   case class Create(id: String)
 
   case object `Exist?`
-
-  case object NotFound
 
   case class Created(id: String)
 

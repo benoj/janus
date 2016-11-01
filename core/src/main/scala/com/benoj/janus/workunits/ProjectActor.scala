@@ -7,11 +7,12 @@ import com.benoj.janus.PersistentLoggingActor
 import com.benoj.janus.behavior.Attributes.implicits._
 import com.benoj.janus.behavior.Created.Create
 import com.benoj.janus.behavior.{Attributes, Created, JanusEventProcessing, WorkFlow}
+import com.benoj.janus.common.NotFound
 import com.benoj.janus.organisation.IdActor
 import com.benoj.janus.organisation.IdActor.Messages.{GetNextId, Id}
 import com.benoj.janus.suppliers.Actors.IdSupplier
 import com.benoj.janus.workflow.WorkflowActor.WorkflowStage
-import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, StoryNotFound, UpdateStory}
+import com.benoj.janus.workunits.ProjectActor.Messages.{CreateNewStoryInBacklog, UpdateStory}
 
 import scala.concurrent.ExecutionContext
 
@@ -34,7 +35,7 @@ class ProjectActor(description: String)(implicit val timeout: Timeout, val execu
       log.info(s"Update project story $id with $msg")
       context.child(id) match {
         case None =>
-          sender() ! StoryNotFound
+          sender() ! NotFound
         case Some(story) =>
           story forward msg
       }
@@ -59,8 +60,6 @@ object ProjectActor {
     case class CreateNewStoryInBacklog(name: String, description: String)
 
     case class UpdateStory(id: String, msg: Any)
-
-    case object StoryNotFound
 
   }
 

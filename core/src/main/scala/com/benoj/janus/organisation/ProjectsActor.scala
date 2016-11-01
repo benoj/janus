@@ -1,16 +1,14 @@
 package com.benoj.janus.organisation
 
 import akka.actor.Actor
-import com.benoj.janus.behavior.Created.NotFound
-import com.benoj.janus.organisation.ProjectsActor.{Conflict, CreateProject, GetProject, GetProjects}
+import com.benoj.janus.common.{Conflict, NotFound}
+import com.benoj.janus.organisation.ProjectsActor.{CreateProject, GetProject, GetProjects}
 import com.benoj.janus.workunits.ProjectActor
 
 object ProjectsActor {
   case object GetProjects
   case class GetProject(name: String)
   case class CreateProject(name: String, description: String)
-
-  case object Conflict
 }
 class ProjectsActor extends Actor {
   override def receive: Receive = {

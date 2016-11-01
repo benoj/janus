@@ -3,8 +3,8 @@ package com.benoj.janus.workflow
 import cats.data.Xor
 import com.benoj.janus.Events._
 import com.benoj.janus.PersistentLoggingActor
-import com.benoj.janus.behavior.Created.NotFound
 import com.benoj.janus.behavior.JanusEventProcessing
+import com.benoj.janus.common.NotFound
 import com.benoj.janus.workflow.WorkflowActor.Commands._
 import com.benoj.janus.workflow.WorkflowActor.Events.{WorkUnitAdded, WorkUnitProgressed, WorkUnitRegressed, WorkUnitRemoved}
 import com.benoj.janus.workflow.WorkflowActor.{WorkflowStage, WorkflowState}
